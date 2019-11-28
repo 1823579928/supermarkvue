@@ -1,59 +1,57 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <p>
-      For a guide and recipes on how to configure / customize this project,<br>
-      check out the
-      <a href="https://cli.vuejs.org" target="_blank" rel="noopener">vue-cli documentation</a>.
-    </p>
-    <h3>Installed CLI Plugins</h3>
-    <ul>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-babel" target="_blank" rel="noopener">babel</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-router" target="_blank" rel="noopener">router</a></li>
-      <li><a href="https://github.com/vuejs/vue-cli/tree/dev/packages/%40vue/cli-plugin-vuex" target="_blank" rel="noopener">vuex</a></li>
-    </ul>
-    <h3>Essential Links</h3>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank" rel="noopener">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank" rel="noopener">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank" rel="noopener">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank" rel="noopener">Twitter</a></li>
-      <li><a href="https://news.vuejs.org" target="_blank" rel="noopener">News</a></li>
-    </ul>
-    <h3>Ecosystem</h3>
-    <ul>
-      <li><a href="https://router.vuejs.org" target="_blank" rel="noopener">vue-router</a></li>
-      <li><a href="https://vuex.vuejs.org" target="_blank" rel="noopener">vuex</a></li>
-      <li><a href="https://github.com/vuejs/vue-devtools#vue-devtools" target="_blank" rel="noopener">vue-devtools</a></li>
-      <li><a href="https://vue-loader.vuejs.org" target="_blank" rel="noopener">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank" rel="noopener">awesome-vue</a></li>
-    </ul>
-  </div>
+	<div>
+		<h2>登录</h2>
+			<el-form :inline="true" :model="userInfo" class="demo-form-inline">
+				<el-form-item label="用户名">
+					<el-input v-model="userInfo.username" placeholder="用户名"></el-input>
+				</el-form-item><br>
+				<el-form-item label="密码">
+					<el-input v-model="userInfo.password" show-password placeholder="密码"></el-input>
+				</el-form-item>
+			</el-form>
+			<el-button type="primary" @click="submitUser()">确 定</el-button>
+	</div>
 </template>
 
 <script>
-export default {
-  name: 'HelloWorld',
-  props: {
-    msg: String
-  }
-}
+	import {
+		setCookie,
+		getCookie
+	} from '../assets/cookie.js';
+	export default {
+		data() {
+			return {
+				userInfo: {
+					username: '',
+					password: ''
+				}
+			}
+		},
+		methods: {
+			submitUser() {
+				this.$axios.post("/user/login/", this.qs.stringify({
+					'nickname': this.userInfo.username,
+					'password': this.userInfo.password
+				})).then((response) => {
+					var res = response.data.msg;
+					alert(res);
+					if (res == '登录成功') {
+						setCookie('roles', response.data.success.roleList,(24*60*60)); // 使用cookie来记录是否登陆，这边跨域
+						let roles = getCookie('roles');
+						localStorage.setItem("ms_username", this.username); // 使用localstoage来记录登陆信息
+						localStorage.setItem("roles", response.data.success.roleList);
+						localStorage.setItem("permissions", response.data.success.permissionList);
+						this.$router.replace('/main'); //跳转
+					} else {
+						alert('登录失败')
+					}
+				}).catch((error) => {
+					alert(error) //请求失败返回的数据
+				})
+			}
+		}
+	}
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped lang="less">
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
+<style>
 </style>
